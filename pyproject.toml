@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "snipai"
+version = "0.0.1"
+description = "snip.ai"
+authors = [
+    "nguyennpa412 <nguyennpa412@gmail.com>",
+    "tisu19021997 <quangphamm1902@gmail.com>",
+]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pyqt6 = "^6.7.1"
+scipy = "^1.14.1"
+llvmlite = "0.41.0"
+librosa = "^0.10.2.post1"
+pyyaml = "^6.0.2"
+pillow = "^11.0.0"
+PyQt6-Fluent-Widgets = { git = "https://github.com/zhiyiYo/PyQt-Fluent-Widgets.git", branch = "PyQt6", extras = [
+    "full",
+] }
+
+pynput = "^1.7.7"
+loguru = "^0.7.2"
+pydantic = "^2.9.2"
+openai = "^1.52.2"
+llama-cpp-python = "^0.3.1"
+huggingface-hub = "^0.26.2"
+ollama = "0.4.4"
+instructor = "^1.6.3"
+pyqt6-frameless-window = "^0.4.3"
+darkdetect = "^0.8.0"
+colorthief = "^0.2.1"
+sqlmodel = "^0.0.22"
+sqlite-vec = "^0.1.6"
+sentence-transformers = "^3.3.1"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.3.0"
+isort = "^5.13.2"
+pre-commit = "^4.0.1"
+ipykernel = "^6.29.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.ruff]
+line-length = 79

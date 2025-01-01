@@ -1,0 +1,31 @@
+{
+    "MainWindow": {
+        "DpiScale": "Auto"
+    },
+    "Tags": {
+        "AutoTagging": true,
+        "Tags": [
+            "animal",
+            "anime",
+            "book",
+            "cafe",
+            "clothes",
+            "food",
+            "potrait",
+            "sneaker"
+        ]
+    },
+    "Files": {
+        "Image directory": "/Users/minhquang/Desktop/spaces/startup/yova/snipai/assets/images"
+    },
+    "Hotkeys": {
+        "Snip Hotkey": [
+            "alt",
+            "space"
+        ]
+    },
+    "QFluentWidgets": {
+        "ThemeColor": "#ff009faa",
+        "ThemeMode": "Auto"
+    }
+}
