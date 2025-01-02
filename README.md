@@ -7,17 +7,20 @@ Take screenshots, let local AI describe and tag them, then find them instantly t
 Youtube Demo below
 [![Demo Video](/assets/screenshot.png)](https://www.youtube.com/watch?v=ftmSr9TE6wA)
 
+Graph View
+![Graph View](/assets/screenshot-graph.png)
+
 ## Features
 
-- Take and organize screenshots
-- Generate tags and descriptions using local AI models
-  - `moondream` for generating description from images
-  - `qwen2:1.5b` for image tagging
-- Search using binary vector embeddings, running offline
-  - `mxbai-embed-large` for text embedding
-  - use [sqlite-vec](https://github.com/asg017/sqlite-vec)
-- Only open-source models, right on your machine
-- Zero setup - uses `SQLite` for both database and vector embeddings
+- Take, organize, and search for screenshots in a PyQt application
+- All local small language models
+- Use `ollama` for all generation tasks:
+  - Generate tags and descriptions
+    - `moondream` for generating description from images - super fast and accurate
+    - `qwen2:1.5b` for image tagging - super fast and good at structured outputs
+- Search images by natural language using binary vector embeddings
+  - `mxbai-embed-large` for text embedding - with [binary quantization](https://www.mixedbread.ai/blog/binary-mrl) to minize storage and speed up retrieval
+  - use [sqlite-vec](https://github.com/asg017/sqlite-vec) for retrieval
 - Interactive graph view to explore similar screenshots (work in progress)
 
 ## Installation
@@ -77,7 +80,7 @@ python -m snipai.app
 
 ### Milestones
 
-- [ ] Finish interactive graph view
+- [ ] Optimize graph view - both UX and node embeddings
 - [ ] Use image embedding models instead of description embeddings
 - [ ] Reflect tags and descriptions to native OS file system metadata - [files over apps](https://stephango.com/file-over-app)
 - [ ] Obsidian integration
