@@ -4,7 +4,12 @@ from loguru import logger
 from PyQt6.QtCore import QSize, Qt
 from PyQt6.QtGui import QGuiApplication, QPixmap
 from PyQt6.QtWidgets import QDialog, QLabel, QVBoxLayout, QWidget
-from qfluentwidgets import ElevatedCardWidget, ImageLabel, PlainTextEdit
+from qfluentwidgets import (
+    ElevatedCardWidget,
+    FluentStyleSheet,
+    ImageLabel,
+    PlainTextEdit,
+)
 from sqlmodel import select
 
 from snipai.src.common.db import Database
@@ -50,6 +55,7 @@ class ImageCard(ElevatedCardWidget):
             self.setToolTip(caption)
 
         self.image_label.setContentsMargins(0, 0, 0, 0)
+        self.image_label.setObjectName("windowTitleLabel")
         # Initial resize
         self.updateImageSize(default_width)  # Default width
 
@@ -121,6 +127,7 @@ class ImageCard(ElevatedCardWidget):
         """Show the image in a larger window with an editable description overlay"""
         # Create a new dialog
         dialog = QDialog(self)
+        FluentStyleSheet.DIALOG.apply(self)
         dialog.setWindowTitle(self.caption)
         dialog.setWindowFlags(
             Qt.WindowType.Window | Qt.WindowType.WindowCloseButtonHint
@@ -177,9 +184,6 @@ class ImageCard(ElevatedCardWidget):
             overlay_layout.setContentsMargins(10, 5, 10, 5)
 
             description_edit = PlainTextEdit(overlay)
-            description_edit.setStyleSheet(
-                "font-size: 12px; background-color: transparent; color: white;"
-            )
             description_edit.setPlaceholderText(
                 "Write something about the image..."
             )
