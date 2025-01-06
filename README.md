@@ -80,9 +80,11 @@ poetry shell
 python -m snipai.app
 ```
 
-### Milestones
+### Roadmap
 
-- [ ] Optimize graph view - both UX and node embeddings
-- [ ] Use image embedding models instead of description embeddings
-- [ ] Reflect tags and descriptions to native OS file system metadata - [files over apps](https://stephango.com/file-over-app)
-- [ ] Obsidian integration.
+- [ ] Graph view improvements 
+  - [ ] UX
+  - [ ] Switch to image embeddings from text descriptions
+- [ ] Native OS metadata integration - [file over app](https://stephango.com/file-over-app)
+  - [ ] Sync tags to file system
+- [ ] Obsidian integration development
