@@ -27,21 +27,23 @@ Graph View
 
 ### Prerequisites
 
-1. Install Homebrew:
+1. Install Python 3.11.11
+
+2. Install Homebrew:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-2. Install LLVM 14:
+3. Install LLVM 14:
 
 ```bash
 brew install llvm@14
 ```
 
-3. Install [Poetry](https://python-poetry.org/docs/)
+4. Install [Poetry](https://python-poetry.org/docs/)
 
-4. Download [ollama](https://ollama.com/download) for MacOS
+5. Download [ollama](https://ollama.com/download) for MacOS
 
 ### Setting up snipai
 

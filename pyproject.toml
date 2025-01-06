@@ -9,7 +9,7 @@ authors = [
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "3.11.11"
 pyqt6 = "^6.7.1"
 scipy = "^1.14.1"
 llvmlite = "0.41.0"
