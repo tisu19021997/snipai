@@ -2,7 +2,6 @@ from loguru import logger
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from threading import Thread
-from typing import Optional
 from PyQt6.QtCore import QObject, pyqtSignal
 
 

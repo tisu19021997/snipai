@@ -1,7 +1,8 @@
+import sys
 from typing import Literal
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QGuiApplication, QIcon
+from PyQt6.QtGui import QGuiApplication, QIcon, QWindowStateChangeEvent
 from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (
     FluentWindow,
@@ -53,9 +54,15 @@ class Window(FluentWindow):
         self.showMaximized()
 
         # Add these to improve window activation behavior
-        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
+        # Keep window in taskbar/dock
+        self.setWindowFlag(Qt.WindowType.Tool, False)
+
+        # Ensure proper window activation behavior
         self.setAttribute(Qt.WidgetAttribute.WA_MacAlwaysShowToolWindow)
-        self.setAttribute(Qt.WidgetAttribute.WA_MacShowFocusRect)
+
+        # Don't hide from taskbar/dock
+        if sys.platform == "darwin":  # macOS specific
+            self.setWindowFlag(Qt.WindowType.WindowDoesNotAcceptFocus, False)
 
     def init_services(self):
         # Storage service to save and load files
@@ -65,9 +72,7 @@ class Window(FluentWindow):
 
         self.homeInterface = HomeInterface(self.storage_service, parent=self)
         # Bookmarks interface to manage bookmarks
-        self.bookmarksInterface = BookmarksInterface(
-            self.storage_service, parent=self
-        )
+        self.bookmarksInterface = BookmarksInterface(self.storage_service, parent=self)
 
         self.settingInterface = SettingInterface(self.storage_service, self)
 
@@ -84,9 +89,7 @@ class Window(FluentWindow):
     def init_widgets(self):
         self.snip_widget = SnipWidget()
         # On finish snipping, save the screenshot to storage service
-        self.snip_widget.selection_completed.connect(
-            self._on_selection_completed
-        )
+        self.snip_widget.selection_completed.connect(self._on_selection_completed)
 
     def show_notification(
         self,
@@ -121,9 +124,7 @@ class Window(FluentWindow):
         # TODO: validate hotkey
         keys = set(hotkey.split("+"))
         if not any(keys):
-            self.show_notification(
-                "error", f"Hotkey can't be empty: {hotkey}", "Error"
-            )
+            self.show_notification("error", f"Hotkey can't be empty: {hotkey}", "Error")
             return
 
         self.keyboard_service.register_hotkey(keys, action_key=action_key)
@@ -140,14 +141,11 @@ class Window(FluentWindow):
         # Execute the appropriate handler
         if handler := actions.get(action_key):
             if action_key == "snip_start":
-                self.setAttribute(
-                    Qt.WidgetAttribute.WA_ShowWithoutActivating, True
-                )
                 self.setWindowOpacity(0)
+                self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, True)
             else:
-                self.setAttribute(
-                    Qt.WidgetAttribute.WA_ShowWithoutActivating, False
-                )
+                self.setWindowOpacity(1)
+                self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
             handler()
 
     def _on_selection_completed(self, event: SelectionCompletedEvent):
@@ -155,12 +153,31 @@ class Window(FluentWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
         self.setWindowOpacity(1)
 
+        # Ensure window is visible and active
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
     def _on_storage_image_saved(self, image_id: str):
-        self.show_notification(
-            "info", f"Saved screenshot id {image_id}", "Screenshot"
-        )
+        self.show_notification("info", f"Saved screenshot id {image_id}", "Screenshot")
 
     def _on_error_occured(self, error_message: str):
         self.show_notification(
             "error", f"Error saving screenshot: {error_message}", "Error"
         )
+
+    def showEvent(self, event):
+        """Override to ensure proper window restoration"""
+        super().showEvent(event)
+        # Ensure window is visible and properly activated
+        self.setWindowOpacity(1)
+        self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
+
+    def changeEvent(self, event):
+        """Handle window state changes"""
+        super().changeEvent(event)
+        if event.type() == QWindowStateChangeEvent:
+            # If window was minimized, ensure it can be restored
+            if self.windowState() & Qt.WindowMinimized:
+                self.setWindowOpacity(1)
+                self.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating, False)
