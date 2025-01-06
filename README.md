@@ -85,4 +85,4 @@ python -m snipai.app
 - [ ] Optimize graph view - both UX and node embeddings
 - [ ] Use image embedding models instead of description embeddings
 - [ ] Reflect tags and descriptions to native OS file system metadata - [files over apps](https://stephango.com/file-over-app)
-- [ ] Obsidian integration
+- [ ] Obsidian integration.
