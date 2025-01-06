@@ -1,6 +1,5 @@
 from enum import StrEnum
 from datetime import datetime, timezone, timedelta
-from typing import Tuple, Optional
 
 
 class TimeFilter(StrEnum):

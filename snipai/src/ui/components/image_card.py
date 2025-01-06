@@ -42,9 +42,7 @@ class ImageCard(ElevatedCardWidget):
         self.vBoxLayout = QVBoxLayout(self)
         self.vBoxLayout.setSpacing(8)
         self.vBoxLayout.setContentsMargins(8, 8, 8, 8)
-        self.vBoxLayout.addWidget(
-            self.image_label, 0, Qt.AlignmentFlag.AlignCenter
-        )
+        self.vBoxLayout.addWidget(self.image_label, 0, Qt.AlignmentFlag.AlignCenter)
 
         self.storage_service = storage_service
 
@@ -72,9 +70,7 @@ class ImageCard(ElevatedCardWidget):
         )
 
         # Calculate height based on original aspect ratio
-        aspect_ratio = (
-            self.original_pixmap.width() / self.original_pixmap.height()
-        )
+        aspect_ratio = self.original_pixmap.width() / self.original_pixmap.height()
         content_height = int(content_width / aspect_ratio)
 
         # Set image size
@@ -108,16 +104,20 @@ class ImageCard(ElevatedCardWidget):
         return QSize(100, 100)  # Minimum reasonable size for the card
 
     def _set_style(self):
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             ImageCard {
                 border-radius: 8px;
             }
-        """)
-        self.image_label.setStyleSheet("""
+        """
+        )
+        self.image_label.setStyleSheet(
+            """
             ImageLabel {
                 border-radius: 8px;
             }
-        """)
+        """
+        )
 
     def _on_double_click(self, event):
         """Handle double-click event to show the image in a larger window"""
@@ -149,9 +149,7 @@ class ImageCard(ElevatedCardWidget):
             max_height = screen_geometry.height() - 100
 
             # Calculate scaled size maintaining aspect ratio
-            aspect_ratio = (
-                self.original_pixmap.width() / self.original_pixmap.height()
-            )
+            aspect_ratio = self.original_pixmap.width() / self.original_pixmap.height()
             if self.original_pixmap.width() > max_width:
                 scaled_width = max_width
                 scaled_height = int(scaled_width / aspect_ratio)
@@ -184,9 +182,7 @@ class ImageCard(ElevatedCardWidget):
             overlay_layout.setContentsMargins(10, 5, 10, 5)
 
             description_edit = PlainTextEdit(overlay)
-            description_edit.setPlaceholderText(
-                "Write something about the image..."
-            )
+            description_edit.setPlaceholderText("Write something about the image...")
 
             # Set the initial description text (remove the name)
             description_text = self.toolTip().split("\n\n")[
@@ -211,9 +207,7 @@ class ImageCard(ElevatedCardWidget):
 
         # Save the description when the dialog is closed
         dialog.finished.connect(
-            lambda: self._save_description(
-                dialog, description_edit.toPlainText()
-            )
+            lambda: self._save_description(dialog, description_edit.toPlainText())
         )
 
         # Show the dialog
@@ -245,5 +239,8 @@ class ImageCard(ElevatedCardWidget):
         # Emit a signal to notify that the description has been updated
         self.storage_service.image_desc_updated.emit(image_id, description)
         self.storage_service.any2emb.encode(text=description, task_id=image_id)
+        self.storage_service.metadata_service.set_description(
+            self.image_path, description
+        )
 
         self._description_changed = False

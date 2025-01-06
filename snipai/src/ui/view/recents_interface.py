@@ -1,5 +1,5 @@
-from qfluentwidgets import ScrollArea, FluentIcon
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
+from qfluentwidgets import ScrollArea
+from PyQt6.QtWidgets import QWidget, QVBoxLayout
 from PyQt6.QtCore import Qt
 from snipai.src.common.style_sheet import StyleSheet
 
