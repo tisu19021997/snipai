@@ -19,6 +19,7 @@ from snipai.src.model.image import Image, ImageTag, Tag
 from snipai.src.services.base import BaseService
 from snipai.src.services.embed import EmbeddingService
 from snipai.src.services.llm import LLMResponse, LLMService
+from snipai.src.services.metadata import MetadataService
 
 
 class StorageService(BaseService):
@@ -47,14 +48,14 @@ class StorageService(BaseService):
 
     def init_services(self):
         self.image2text = LLMService(model="moondream")
-        self.image2text.generation_completed.connect(
-            self._update_image_description
-        )
+        self.image2text.generation_completed.connect(self._update_image_description)
 
         self.imgdesc2tags = LLMService(model="qwen2:1.5b")
 
         self.any2emb = EmbeddingService()
         self.any2emb.embed_completed.connect(self._save_image_emb)
+
+        self.metadata_service = MetadataService()
 
     def save_screenshot(self, pixmap: QPixmap):
         """Queue screenshot for saving"""
@@ -91,6 +92,13 @@ class StorageService(BaseService):
         # Save the image
         pixmap.save(str(filepath))
 
+        # Initialize empty metadata
+        try:
+            self.metadata_service.set_description(str(filepath), "")
+            self.metadata_service.set_tags(str(filepath), [])
+        except Exception as e:
+            logger.error(f"Error setting metadata: {str(e)}")
+
     def _delete_image(self, image: Image):
         """
         Delete an image and all its related data.
@@ -124,9 +132,7 @@ class StorageService(BaseService):
             # We need to use raw SQL for the virtual table
             with Database._engine.connect() as conn:
                 conn.execute(
-                    text(
-                        "DELETE FROM image_embedding WHERE image_id = :image_id"
-                    ),
+                    text("DELETE FROM image_embedding WHERE image_id = :image_id"),
                     {"image_id": image.id},
                 )
                 conn.commit()
@@ -168,6 +174,13 @@ class StorageService(BaseService):
             stmt = select(Image).where(Image.id == image_id)
             image = session.exec(stmt).one()
             image.description = image_desc.strip()
+
+            # Update metadata
+            try:
+                image_path = str(self.images_dir / image.filepath)
+                self.metadata_service.set_description(image_path, image_desc)
+            except Exception as e:
+                logger.error(f"Failed to update metadata description: {str(e)}")
 
             if tags and cfg.enable_ai_tagging:
                 # LLM model
@@ -215,6 +228,9 @@ class StorageService(BaseService):
             session.commit()
             session.refresh(image)
 
+            logger.info(
+                f"Updated description for image {image.id}: {image.description}"
+            )
             self.image_desc_updated.emit(image.id, image.description)
 
         self.any2emb.encode(text=image_desc, task_id=image_id)
@@ -227,12 +243,8 @@ class StorageService(BaseService):
     def _save_image_emb(self, task_id: str, embeddings_str: str):
         """Save or update the embedding representation of an image."""
         # Convert embeddings str to ndarray
-        description_embeddings = [
-            float(x) for x in embeddings_str.strip("[]").split()
-        ]
-        serialized_embeddings = self._serialize_embedding(
-            description_embeddings
-        )
+        description_embeddings = [float(x) for x in embeddings_str.strip("[]").split()]
+        serialized_embeddings = self._serialize_embedding(description_embeddings)
 
         with Database._engine.connect() as conn:
             # Check if a record with the same image_id exists
@@ -287,9 +299,7 @@ class StorageService(BaseService):
         with Database.session() as session:
             return self._get_image_tags(session, image_id=image_id)
 
-    def get_image_tags_batch(
-        self, image_ids: List[str]
-    ) -> Dict[str, List[Tag]]:
+    def get_image_tags_batch(self, image_ids: List[str]) -> Dict[str, List[Tag]]:
         """Fetch tags for multiple images in a single query."""
         with Database.session() as session:
             # Query to get all tags for the specified images
@@ -306,9 +316,7 @@ class StorageService(BaseService):
             for image_tag, tag in results:
                 if image_tag.image_id not in tags_by_image:
                     tags_by_image[image_tag.image_id] = []
-                tags_by_image[image_tag.image_id].append(
-                    Tag(**tag.model_dump())
-                )
+                tags_by_image[image_tag.image_id].append(Tag(**tag.model_dump()))
 
             return tags_by_image
 
@@ -316,9 +324,7 @@ class StorageService(BaseService):
         if _tags := response.response.get("names"):
             tags_name = set(_tags)
 
-            tags = [
-                Tag(is_generated=True, name=tag_name) for tag_name in tags_name
-            ]
+            tags = [Tag(is_generated=True, name=tag_name) for tag_name in tags_name]
             logger.warning(f"Tagging by LLM is done - response: {tags_name}")
             with Database.session() as session:
                 return self._update_image_tags(
@@ -345,23 +351,31 @@ class StorageService(BaseService):
         # Clear existing tags
         image.tags.clear()
 
+        tag_names = []
         # Add all selected tags
         for tag in updated_tags:
             # Check if tag already exists in database
-            db_tag = session.exec(
-                select(Tag).where(Tag.name == tag.name)
-            ).first()
+            db_tag = session.exec(select(Tag).where(Tag.name == tag.name)).first()
             if db_tag:
                 # Use existing tag from database
                 image.tags.append(db_tag)
+                tag_names.append(db_tag.name)
             else:
                 # Create new tag
                 session.add(tag)
                 image.tags.append(tag)
+                tag_names.append(tag.name)
+        # Update tags
+        try:
+            image_path = str(self.images_dir / image.filepath)
+            self.metadata_service.set_tags(image_path, tag_names)
+        except Exception as e:
+            logger.error(f"Failed to update metadata tags: {str(e)}")
 
         session.add(image)
         session.commit()
 
+        logger.info(f"Updated tags for image {image_id}: {tag_names}")
         self.tag_added.emit(image_id, [tag.id for tag in updated_tags])
         return Image(**image.model_dump())
 
@@ -377,24 +391,20 @@ class StorageService(BaseService):
             if with_count:
                 # Query that includes the count of images per tag
                 query = (
-                    select(
-                        Tag, func.count(ImageTag.image_id).label("image_count")
-                    )
+                    select(Tag, func.count(ImageTag.image_id).label("image_count"))
                     .outerjoin(ImageTag)
                     .group_by(Tag.id)
                     .order_by(Tag.name)
                 )
                 results = session.exec(query).all()
-                return [
-                    (Tag(**tag.model_dump()), count) for tag, count in results
-                ]
+                return [(Tag(**tag.model_dump()), count) for tag, count in results]
             else:
                 # Original query without counts
                 tags = session.exec(select(Tag).order_by(Tag.name)).all()
                 return [Tag(**t.model_dump()) for t in tags]
 
     def update_tags(self, tags: List[str]):
-        """Update"""
+        """Update tags in database"""
         if not tags:
             return
         with Database.session() as session:
@@ -433,7 +443,7 @@ class StorageService(BaseService):
             # When we have a query, use the full hybrid search
             base_query = """
             WITH VectorScores AS (
-                SELECT 
+                SELECT
                     i.*,
                     vec_distance_cosine(description_embedding, :embedding) as rank
                 FROM image i
@@ -449,13 +459,9 @@ class StorageService(BaseService):
                 INNER JOIN tag t ON it.tag_id = t.id AND t.name IN (:tags)
                 """
 
-            query_embeddings = self.any2emb._encode(
-                query.strip(), retrieval=True
-            )[0]
+            query_embeddings = self.any2emb._encode(query.strip(), retrieval=True)[0]
             params = {
-                "embedding": self._serialize_embedding(
-                    query_embeddings.tolist()
-                ),
+                "embedding": self._serialize_embedding(query_embeddings.tolist()),
             }
         else:
             # When no query, just return all images ordered by timestamp
@@ -477,9 +483,7 @@ class StorageService(BaseService):
         # Add tag filtering parameters if tags are provided
         if tags:
             if len(tags) == 1:
-                base_query = base_query.replace(
-                    "t.name IN (:tags)", "t.name = :tags"
-                )
+                base_query = base_query.replace("t.name IN (:tags)", "t.name = :tags")
                 params["tags"] = tags[0]
             else:
                 # Create individual parameters for each tag
@@ -532,13 +536,7 @@ class StorageService(BaseService):
 
         # Convert to list of Image objects (excluding the count column)
         images = [
-            Image(
-                **{
-                    k: v
-                    for k, v in dict(row._mapping).items()
-                    if k != "total_count"
-                }
-            )
+            Image(**{k: v for k, v in dict(row._mapping).items() if k != "total_count"})
             for row in results
         ]
         return images, total_count
@@ -584,12 +582,13 @@ class StorageService(BaseService):
     def compute_similarity(self, image_id1: str, image_id2: str) -> float:
         """Compute cosine similarity between two images' description embeddings."""
         with Database._engine.connect() as conn:
-            query = text("""
+            query = text(
+                """
                 SELECT vec_distance_cosine(e1.description_embedding, e2.description_embedding) as similarity
                 FROM image_embedding e1, image_embedding e2
                 WHERE e1.image_id = :id1 AND e2.image_id = :id2
-            """)
-            result = conn.execute(
-                query, {"id1": image_id1, "id2": image_id2}
-            ).scalar()
+            """
+            )
+            result = conn.execute(query, {"id1": image_id1, "id2": image_id2}).scalar()
+            return float(result) if result is not None else 0.0
             return float(result) if result is not None else 0.0

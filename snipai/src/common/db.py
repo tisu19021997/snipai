@@ -30,7 +30,6 @@ class Database:
         """Initialize database connection"""
         if cls._engine is None:
             db_path = base_path / "app.db"
-            sqlite_url = f"sqlite:///{db_path}"
 
             # Create engine with connection pool
             def _create_connection():
