@@ -106,5 +106,5 @@ python -m snipai.app
   - [ ] UX
   - [ ] Switch to image embeddings from text descriptions
 - [x] Native OS metadata integration - [file over app](https://stephango.com/file-over-app)
-  - [ ] Sync tags to file system
+  - [x] Sync tags to file system
 - [ ] Obsidian integration development
