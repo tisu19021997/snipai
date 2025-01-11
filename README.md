@@ -26,15 +26,15 @@ Graph View
 
 ### Prerequisites
 
-1. Install Python 3.11.11 using pyenv (recommended):
+1. Install Python 3.11.10 using pyenv (recommended):
 
 ```bash
 brew install pyenv
 
-pyenv install 3.11.11
+pyenv install 3.11.10
 
-# Set Python 3.11.11 as your global version (optional)
-pyenv global 3.11.11
+# Set Python 3.11.10 as your global version (optional)
+pyenv global 3.11.10
 ```
 
 2. Install Homebrew:
@@ -55,12 +55,12 @@ brew install llvm@14
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-5. Configure Poetry to use Python 3.11.11:
+5. Configure Poetry to use Python 3.11.10:
 
-```
-poetry env use 3.11.11
+```bash
+poetry env use 3.11.10
 
-poetry run python --version  # Should output: Python 3.11.11
+poetry run python --version  # Should output: Python 3.11.10
 ```
 
 6. Download [ollama](https://ollama.com/download) for MacOS
