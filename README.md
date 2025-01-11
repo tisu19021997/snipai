@@ -15,9 +15,8 @@ Graph View
 - Take, organize, and search for screenshots in a PyQt application
 - All local small language models
 - Use `ollama` for all generation tasks:
-  - Generate tags and descriptions
-    - `moondream` for generating description from images - super fast and accurate
-    - `qwen2:1.5b` for image tagging - super fast and good at structured outputs
+  - `moondream` for generating description from images - super fast and accurate
+  - `qwen2:1.5b` for image tagging - super fast and good at structured outputs
 - Search images by natural language using binary vector embeddings
   - `mxbai-embed-large` for text embedding - with [binary quantization](https://www.mixedbread.ai/blog/binary-mrl) to minize storage and speed up retrieval
   - use [sqlite-vec](https://github.com/asg017/sqlite-vec) for retrieval
@@ -27,21 +26,44 @@ Graph View
 
 ### Prerequisites
 
-1. Install Homebrew:
+1. Install Python 3.11.11 using pyenv (recommended):
+
+```bash
+brew install pyenv
+
+pyenv install 3.11.11
+
+# Set Python 3.11.11 as your global version (optional)
+pyenv global 3.11.11
+```
+
+2. Install Homebrew:
 
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-2. Install LLVM 14:
+3. Install LLVM 14:
 
 ```bash
 brew install llvm@14
 ```
 
-3. Install [Poetry](https://python-poetry.org/docs/)
+4. Install [Poetry](https://python-poetry.org/docs/)
 
-4. Download [ollama](https://ollama.com/download) for MacOS
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+5. Configure Poetry to use Python 3.11.11:
+
+```
+poetry env use 3.11.11
+
+poetry run python --version  # Should output: Python 3.11.11
+```
+
+6. Download [ollama](https://ollama.com/download) for MacOS
 
 ### Setting up snipai
 
@@ -82,5 +104,5 @@ python -m snipai.app
 
 - [ ] Optimize graph view - both UX and node embeddings
 - [ ] Use image embedding models instead of description embeddings
-- [ ] Reflect tags and descriptions to native OS file system metadata - [files over apps](https://stephango.com/file-over-app)
+- [x] Reflect tags and descriptions to native OS file system metadata - [files over apps](https://stephango.com/file-over-app)
 - [ ] Obsidian integration
