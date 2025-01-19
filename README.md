@@ -43,10 +43,10 @@ pyenv global 3.11.10
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
-3. Install LLVM 14:
+3. Install inih for native OS metadata modifications:
 
 ```bash
-brew install llvm@14
+brew install inih
 ```
 
 4. Install [Poetry](https://python-poetry.org/docs/)
